@@ -187,7 +187,7 @@ function gradient(start_color: number[], end_color: number[], ratio: number): nu
 }
 
 export function text_gradient(input: string, colors: string[], spaces_count = false): TMData[] {
-    let base: TMData[] = text_to_tm(input, false);
+    const base: TMData[] = text_to_tm(input, false);
 
     let input_tm: TMData[] = base;
 
@@ -195,34 +195,35 @@ export function text_gradient(input: string, colors: string[], spaces_count = fa
         input_tm = input_tm.filter((element) => !is_whitespace(element.text));
     }
 
-    let input_colors = [...colors];
-    if (input_tm.length < colors.length) {
-        input_colors = input_colors.slice(0, input_tm.length);
+    if (input_tm.length == 0 || colors.length == 0) {
+        return compress_tmdata(base);
     }
 
-    let gradients_num = input_colors.length - 1;
-    let char_per_color_set = Math.floor(input_tm.length / gradients_num);
-
-    let output: TMData[] = [...input_tm];
-
     for (let i = 0; i < input_tm.length; i++) {
-        var start_color = input_colors[Math.min(Math.floor(i / char_per_color_set), gradients_num)];
-        var end_color = input_colors[Math.min(Math.floor(i / char_per_color_set) + 1, gradients_num)];
-        var ratio = Math.min(1, (i % char_per_color_set) / char_per_color_set);
-        let rgb = gradient(hex_to_rgb(start_color), hex_to_rgb(end_color), ratio);
-        let hex = rgb_to_hex_3(rgb[0], rgb[1], rgb[2]).slice(1);
-        output[i].style.color = "#" + hex;
+        const position = input_tm.length == 1 ? 0 : i / (input_tm.length - 1);
+        const scaled_position = position * (colors.length - 1);
+        const start_index = Math.floor(scaled_position);
+        const end_index = Math.min(start_index + 1, colors.length - 1);
+        const ratio = scaled_position - start_index;
+        const start_color = colors[start_index];
+        const end_color = colors[end_index];
+        const rgb = gradient(hex_to_rgb(start_color), hex_to_rgb(end_color), ratio);
+        const hex = rgb_to_hex_3(rgb[0], rgb[1], rgb[2]).slice(1);
+        input_tm[i].style.color = "#" + hex;
     }
 
     if (!spaces_count) {
+        let last_color = DEFAULT_COLOR;
         for (let i = 0; i < base.length; i++) {
             if (is_whitespace(base[i].text)) {
-                output.splice(i, 0, { style: i > 0 ? { ...base[i - 1].style } : { ...DEFAULT_STYLE }, text: base[i].text });
+                base[i].style.color = last_color;
+            } else {
+                last_color = base[i].style.color;
             }
         }
     }
 
-    return compress_tmdata(output);
+    return compress_tmdata(base);
 }
 
 function is_whitespace(input: string): boolean {
