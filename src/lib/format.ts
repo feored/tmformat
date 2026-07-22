@@ -51,6 +51,17 @@ const MODIFIER_SYMBOL = "$"
 const BASIC_MODIFIERS = ["i", "o", "s", "w", "n", "g", "m", "z", "t"]
 const HEXADECIMAL = "0123456789ABCDEF"
 const DEFAULT_COLOR = "#fff";
+const GRAPHEME_SEGMENTER = typeof Intl.Segmenter == "undefined"
+    ? null
+    : new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+function first_grapheme(input: string): string {
+    if (GRAPHEME_SEGMENTER) {
+        return GRAPHEME_SEGMENTER.segment(input)[Symbol.iterator]().next().value?.segment ?? "";
+    }
+
+    return Array.from(input)[0] ?? "";
+}
 
 function is_same_style(a: TMStyle, b: TMStyle): boolean {
     return a.color == b.color && a.bold == b.bold && a.italic == b.italic && a.shadow == b.shadow && a.width == b.width && a.uppercase == b.uppercase;
@@ -148,7 +159,8 @@ function is_color_token(input: string): { is_color: boolean, color_value: string
 
 function tokenize_next(input: string): TokenData {
     if (input[0] != MODIFIER_SYMBOL) {
-        return { type: Token.Character, value: input[0], skip: 0 }
+        const grapheme = first_grapheme(input);
+        return { type: Token.Character, value: grapheme, skip: grapheme.length - 1 }
     }
     else {
         if (input.length == 1) {
@@ -167,7 +179,8 @@ function tokenize_next(input: string): TokenData {
         return { type: modifier_to_token(input[1]), value: "", skip: 1 }
     }
 
-    return { type: Token.Invalid, value: input[1], skip: 1 }
+    const invalid_value = first_grapheme(input.slice(1));
+    return { type: Token.Invalid, value: invalid_value, skip: invalid_value.length }
 }
 
 function tokenize(input: string): TokenData[] {
@@ -337,8 +350,8 @@ export function tmdata_to_text(input: TMData[]): string {
 
 
         // add text
-        for (let j = 0; j < input[i].text.length; j++) {
-            if (input[i].text[j] == MODIFIER_SYMBOL) {
+        for (const character of input[i].text) {
+            if (character == MODIFIER_SYMBOL) {
                 output_tokens.push({
                     type: Token.Dollar,
                     value: MODIFIER_SYMBOL,
@@ -347,7 +360,7 @@ export function tmdata_to_text(input: TMData[]): string {
             } else {
                 output_tokens.push({
                     type: Token.Character,
-                    value: input[i].text[j],
+                    value: character,
                     skip: 0
                 });
             }
