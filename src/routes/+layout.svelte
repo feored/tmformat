@@ -1,6 +1,7 @@
 <script>
 	import '$lib/css/style.css';
 	import { version } from '$app/environment';
+	import Navigation from '$lib/components/navigation.svelte';
 	import { Github } from 'lucide-svelte';
 </script>
 
@@ -13,4 +14,5 @@
 		</a>
 	</div>
 </header>
+<Navigation />
 <slot />

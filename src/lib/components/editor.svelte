@@ -19,9 +19,6 @@
 	for (let i = 768; i <= 879; i++) {
 		diacritics.push(String.fromCodePoint(i));
 	}
-	let selected_diacritic = $state(diacritics[0]);
-	let selected_icon = $state(ICONS[0]);
-
 	let open_dialogs = $state({
 		icons: false,
 		diacritics: false

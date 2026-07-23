@@ -11,20 +11,6 @@
 	let gradient_colors = $state(INITIAL_COLORS);
 	let spaces_count = $state(false);
 
-	function gradient_data_to_text(gradient_data: { color?: string; character: string }[]): string {
-		let final_text = '';
-		let last_color = '';
-		for (let i = 0; i < gradient_data.length; i++) {
-			if (gradient_data[i].color && gradient_data[i].color != last_color) {
-				final_text += `$${gradient_data[i].color}${gradient_data[i].character}`;
-				last_color = gradient_data[i].color!;
-			} else {
-				final_text += gradient_data[i].character;
-			}
-		}
-		return final_text;
-	}
-
 	let tm_data = $derived(text_gradient(gradient_text, gradient_colors, spaces_count));
 	let tm_text = $derived(tmdata_to_text(tm_data));
 </script>
@@ -47,6 +33,7 @@
 			{#each gradient_colors as color, i}
 				<div class="flex">
 					<input
+						title={`Color ${i + 1}: ${color}`}
 						type="color"
 						bind:value={gradient_colors[i]}
 						oninput={() => {

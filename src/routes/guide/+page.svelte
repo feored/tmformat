@@ -1,19 +1,27 @@
 <script lang="ts">
-	import { formatting_data, formatting_unsupported } from '$lib/format_help';
+	import { formatting_data, formatting_unsupported, type FormattingInfo } from '$lib/format_help';
 	import Viewer from '$lib/components/viewer.svelte';
 </script>
 
-{#snippet format_guide(
-	format_list: { name: string; code: string; description: string; example?: string }[]
-)}
+{#snippet format_guide(format_list: FormattingInfo[])}
 	{#each format_list as format_info}
-		<!-- <span class="accent">{format_info.name}</span><code>[{format_info.code}]</code> -->
 		<details open>
 			<summary>{format_info.name} <code class="large">[{format_info.code}]</code></summary>
-			<p>{@html format_info.description}</p>
+			<p>
+				{#each format_info.description as line, line_index}
+					{#if line_index > 0}<br />{/if}
+					{#each line as part}
+						{#if typeof part === 'string'}
+							{part}
+						{:else}
+							<code class="description-code">{part.code}</code>
+						{/if}
+					{/each}
+				{/each}
+			</p>
 			{#if format_info.example}
 				<div class="flex" style="gap:1rem;">
-					<code class="shrink">{@html format_info.example}</code>
+					<code class="shrink">{format_info.example}</code>
 					<div class="grow">
 						<Viewer tm_text={format_info.example} />
 					</div>
@@ -23,12 +31,6 @@
 	{/each}
 {/snippet}
 
-<menu>
-	<li><a href="./">Editor</a></li>
-	<li><a href="./gradient">Gradient</a></li>
-	<li><a href="./randomize">Randomize</a></li>
-	<li class="selected"><a href="#">Guide</a></li>
-</menu>
 <header>
 	<h2>Formatting Guide</h2>
 	<p class="muted">Tested in TM², details may vary in other versions of Trackmania.</p>
@@ -54,5 +56,12 @@
 		height: 100%;
 		font-size: x-large;
 		display: inline-block;
+	}
+
+	code.description-code {
+		display: inline;
+		height: auto;
+		padding: 0.125rem 0.25rem;
+		font-size: inherit;
 	}
 </style>
